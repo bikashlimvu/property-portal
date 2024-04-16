@@ -20,6 +20,7 @@ const PropertyMap = ({ property }) => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [geocodeError, setGeocodeError] = useState(false);
 
   setDefaults({
     key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY,
@@ -34,27 +35,46 @@ const PropertyMap = ({ property }) => {
 
   useEffect(() => {
     const fetchCoords = async () => {
-      const res = await fromAddress(
-        `${property.location.street} ${property.location.city} ${property.location.state} ${property.location.zipcode}`
-      );
+      try {
+        const res = await fromAddress(
+          `${property.location.street} ${property.location.city} ${property.location.state} ${property.location.zipcode}`
+        );
 
-      const { lat, lng } = res.results[0].geometry.location;
+        // Check for results
+        if (res.results.length === 0) {
+          // No results found
+          setGeocodeError(true);
+          setLoading(false);
+          return;
+        }
 
-      setLat(lat);
-      setLng(lng);
+        const { lat, lng } = res.results[0].geometry.location;
 
-      setCenter({
-        lat,
-        lng,
-      });
+        setLat(lat);
+        setLng(lng);
 
-      setLoading(false);
+        setCenter({
+          lat,
+          lng,
+        });
+
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+        setGeocodeError(true);
+        setLoading(false);
+      }
     };
 
     fetchCoords();
   }, []);
 
   if (loading && isLoaded) return <Spinner loading={loading} />;
+
+  // Handle case where geocoding failed
+  if (geocodeError) {
+    return <div className="text-xl">No location data found</div>;
+  }
 
   return (
     !loading && (
