@@ -69,7 +69,7 @@ const PropertyMap = ({ property }) => {
     fetchCoords();
   }, []);
 
-  if (loading && isLoaded) return <Spinner loading={loading} />;
+  if (loading && !isLoaded) return <Spinner loading={loading} />;
 
   // Handle case where geocoding failed
   if (geocodeError) {
